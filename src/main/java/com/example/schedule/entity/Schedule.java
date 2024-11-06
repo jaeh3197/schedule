@@ -27,4 +27,11 @@ public class Schedule {
         this.modified_at = modified_at;
     }
 
+    public void updateSchedule(String name, String title, String content, String modified_at) {
+        this.name = name;
+        this.title = title;
+        this.content = content;
+        this.modified_at = modified_at;
+    }
+
 }
