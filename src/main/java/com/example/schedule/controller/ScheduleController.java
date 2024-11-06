@@ -2,41 +2,63 @@ package com.example.schedule.controller;
 
 import com.example.schedule.dto.ScheduleRequestDto;
 import com.example.schedule.dto.ScheduleResponseDto;
-import com.example.schedule.entity.Schedule;
+import com.example.schedule.service.ScheduleService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 @RestController
 @RequestMapping("/schedules")
 public class ScheduleController {
 
-    //요청 받은 데이터를 임시로 저장할 Map 생성
-    private final Map<Long, Schedule> scheduleList = new HashMap<>();
+    //Schedule 클래스 호출
+    private final ScheduleService scheduleService;
 
-    //Schedule 생성
+    //생성자 주입
+    public ScheduleController(ScheduleService scheduleService) {
+        this.scheduleService = scheduleService;
+    }
+
+    //일정 생성
     @PostMapping
     public ResponseEntity<ScheduleResponseDto> createSchedule(@RequestBody ScheduleRequestDto dto) {
 
-        // 식별자가 1씩 증가
-        Long scheduleId = scheduleList.isEmpty() ? 1 : Collections.max(scheduleList.keySet()) + 1;
+        //Service Layer 호출, 응답
+        return new ResponseEntity<>(scheduleService.saveSchedule(dto), HttpStatus.CREATED);
+    }
 
-        // 입력 받은 데이터로 Schedule 객체 생성
-        Schedule schedule = new Schedule(
-                scheduleId, dto.getName(), dto.getPassword(), dto.getTitle(),
-                dto.getContent(), dto.getCreated_at(), dto.getModified_at()
+    //일정 전체 조회
+    @GetMapping("/{name}/{modified_at}")
+    public ResponseEntity<List<ScheduleResponseDto>> getAllSchedules(@PathVariable String name, @PathVariable String modified_at) {
+
+        return new ResponseEntity<>(scheduleService.getAllSchedules(name,modified_at), HttpStatus.OK);
+    }
+
+    //선택 일정 조회
+    @GetMapping("/{id}")
+    public ResponseEntity<ScheduleResponseDto> getSchedule(@PathVariable long id) {
+
+        return new ResponseEntity<>(scheduleService.findScheduleById(id), HttpStatus.OK);
+    }
+
+    //선택한 일정 수정
+    @PatchMapping("/{id}")
+    public ResponseEntity<ScheduleResponseDto> updateSchedule(
+            @PathVariable long id,
+            @RequestBody ScheduleRequestDto dto
+    ) {
+
+        return new ResponseEntity<>(scheduleService.updateSchedule(
+                id, dto.getName(), dto.getPassword(), dto.getTitle(),
+                dto.getContent(), dto.getModified_at()), HttpStatus.OK
         );
+    }
 
-        // Map 에 객체 저장
-        scheduleList.put(scheduleId, schedule);
-
-        return new ResponseEntity<>(new ScheduleResponseDto(schedule), HttpStatus.CREATED);
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteSchedule(@PathVariable long id) {
+        scheduleService.deleteSchedule(id);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }
