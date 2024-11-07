@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface ScheduleRepository {
 
-    Schedule saveSchedule(Schedule schedule);
+    ScheduleResponseDto saveSchedule(Schedule schedule);
 
     List<ScheduleResponseDto> getAllSchedules(String name, String modified_at);
 
