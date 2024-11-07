@@ -6,9 +6,11 @@ import com.example.schedule.entity.Schedule;
 import com.example.schedule.repository.ScheduleRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Optional;
 
 //Service 어노테이션 생성
 //비지니스 로직 구현
@@ -36,57 +38,64 @@ public class ScheduleServiceImpl implements ScheduleService {
     }
 
     @Override
-    public List<ScheduleResponseDto> getAllSchedules(String name, String modified_at) {
+    public List<ScheduleResponseDto> getAllSchedules() {
 
-        return scheduleRepository.getAllSchedules(name, modified_at);
+        return scheduleRepository.getAllSchedules();
     }
 
     @Override
     public ScheduleResponseDto findScheduleById(long id) {
 
-        Schedule schedule = scheduleRepository.findScheduleById(id);
+        Optional<Schedule> optionalSchedule = scheduleRepository.findScheduleById(id);
 
-        if (schedule == null) {
+        if (optionalSchedule.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Does not exist id = " + id);
         }
 
-        return new ScheduleResponseDto(schedule);
+        return new ScheduleResponseDto(optionalSchedule.get());
     }
 
+    @Transactional
     @Override
     public ScheduleResponseDto updateSchedule(
             long id, String name, long password, String title, String content, String modified_at
     ) {
-        Schedule schedule = scheduleRepository.findScheduleById(id);
 
-        if (schedule == null) {
+        if (name == null || password == 0 || title == null || modified_at == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Name and password are required");
+        }
+
+        int updatedRow = scheduleRepository.updateSchedule(id, name, password, title, content, modified_at);
+
+        if (updatedRow == 0) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Does not exist id = " + id);
         }
 
-        if (password != schedule.getPassword()) {
+        Optional<Schedule> optionalSchedule = scheduleRepository.findScheduleById(id);
+
+        if (password != optionalSchedule.get().getPassword()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Wrong password");
         }
 
-        schedule.updateSchedule(name, title, content, modified_at);
-
-        return new ScheduleResponseDto(schedule);
+        return new ScheduleResponseDto(optionalSchedule.get());
     }
 
+    @Transactional
     @Override
     public void deleteSchedule(long id, long password) {
 
-        Schedule schedule = scheduleRepository.findScheduleById(id);
+        Optional<Schedule> optionalSchedule = scheduleRepository.findScheduleById(id);
 
-        if (schedule == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Does not exist id = " + id);
-        }
-
-        if (password != schedule.getPassword()) {
+        if (password != optionalSchedule.get().getPassword()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Wrong password");
         }
 
-        scheduleRepository.deleteSchedule(id);
+        int deletedRow = scheduleRepository.deleteSchedule(id, password);
+
+        if (deletedRow == 0) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Does not exist id = " + id);
+        }
+
+
     }
-
-
 }

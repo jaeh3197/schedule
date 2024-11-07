@@ -30,10 +30,10 @@ public class ScheduleController {
     }
 
     //일정 전체 조회
-    @GetMapping("/{name}/{modified_at}")
-    public ResponseEntity<List<ScheduleResponseDto>> getAllSchedules(@PathVariable String name, @PathVariable String modified_at) {
+    @GetMapping
+    public ResponseEntity<List<ScheduleResponseDto>> getAllSchedules() {
 
-        return new ResponseEntity<>(scheduleService.getAllSchedules(name,modified_at), HttpStatus.OK);
+        return new ResponseEntity<>(scheduleService.getAllSchedules(), HttpStatus.OK);
     }
 
     //선택 일정 조회

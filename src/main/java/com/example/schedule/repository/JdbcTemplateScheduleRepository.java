@@ -3,14 +3,18 @@ package com.example.schedule.repository;
 import com.example.schedule.dto.ScheduleResponseDto;
 import com.example.schedule.entity.Schedule;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Repository;
 
 import javax.sql.DataSource;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Repository
 public class JdbcTemplateScheduleRepository implements ScheduleRepository {
@@ -42,17 +46,59 @@ public class JdbcTemplateScheduleRepository implements ScheduleRepository {
     }
 
     @Override
-    public List<ScheduleResponseDto> getAllSchedules(String name, String modified_at) {
-        return List.of();
+    public List<ScheduleResponseDto> getAllSchedules() {
+        return jdbcTemplate.query("select * from schedule", scheduleRowMapper());
     }
 
     @Override
-    public Schedule findScheduleById(long id) {
-        return null;
+    public Optional<Schedule> findScheduleById(long id) {
+        List<Schedule> result = jdbcTemplate.query("select * from schedule where id=?", scheduleRowMapperV2(), id);
+        return result.stream().findAny();
     }
 
     @Override
-    public void deleteSchedule(long id) {
+    public int updateSchedule(Long id, String name, long password, String title, String content, String modified_at) {
+        return jdbcTemplate.update(
+                "update schedule set name = ?, title = ?, content = ?,modified_at = ? where id = ?",
+                name, title, content, modified_at, id);
+    }
 
+    @Override
+    public int deleteSchedule(long id, long password) {
+        return jdbcTemplate.update("delete from schedule where id = ?", id);
+    }
+
+    private RowMapper<ScheduleResponseDto> scheduleRowMapper() {
+
+        return new RowMapper<ScheduleResponseDto>() {
+            @Override
+            public ScheduleResponseDto mapRow(ResultSet rs, int rowNum) throws SQLException {
+                return new ScheduleResponseDto(
+                        rs.getLong("id"),
+                        rs.getString("name"),
+                        rs.getString("title"),
+                        rs.getString("content"),
+                        rs.getString("created_at"),
+                        rs.getString("modified_at")
+                );
+            }
+        };
+    }
+
+    private RowMapper<Schedule> scheduleRowMapperV2() {
+        return new RowMapper<Schedule>() {
+            @Override
+            public Schedule mapRow(ResultSet rs, int rowNum) throws SQLException {
+                return new Schedule(
+                        rs.getLong("id"),
+                        rs.getString("name"),
+                        rs.getLong("password"),
+                        rs.getString("title"),
+                        rs.getString("content"),
+                        rs.getString("created_at"),
+                        rs.getString("modified_at")
+                );
+            }
+        };
     }
 }
