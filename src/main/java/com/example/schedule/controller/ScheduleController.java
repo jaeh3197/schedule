@@ -31,9 +31,9 @@ public class ScheduleController {
 
     //일정 전체 조회
     @GetMapping
-    public ResponseEntity<List<ScheduleResponseDto>> getAllSchedules() {
+    public ResponseEntity<List<ScheduleResponseDto>> getAllSchedules(@RequestBody ScheduleRequestDto dto) {
 
-        return new ResponseEntity<>(scheduleService.getAllSchedules(), HttpStatus.OK);
+        return new ResponseEntity<>(scheduleService.getAllSchedules(dto.getName(), dto.getModified_at()), HttpStatus.OK);
     }
 
     //선택 일정 조회

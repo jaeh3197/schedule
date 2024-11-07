@@ -10,7 +10,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.Optional;
 
 //Service 어노테이션 생성
 //비지니스 로직 구현
@@ -38,21 +37,17 @@ public class ScheduleServiceImpl implements ScheduleService {
     }
 
     @Override
-    public List<ScheduleResponseDto> getAllSchedules() {
+    public List<ScheduleResponseDto> getAllSchedules(String name, String modified_at) {
 
-        return scheduleRepository.getAllSchedules();
+        return scheduleRepository.getAllSchedules(name, modified_at);
     }
 
     @Override
     public ScheduleResponseDto findScheduleById(long id) {
 
-        Optional<Schedule> optionalSchedule = scheduleRepository.findScheduleById(id);
+        Schedule schedule = scheduleRepository.findScheduleByIdOrElseThrow(id);
 
-        if (optionalSchedule.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Does not exist id = " + id);
-        }
-
-        return new ScheduleResponseDto(optionalSchedule.get());
+        return new ScheduleResponseDto(schedule);
     }
 
     @Transactional
@@ -71,22 +66,22 @@ public class ScheduleServiceImpl implements ScheduleService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Does not exist id = " + id);
         }
 
-        Optional<Schedule> optionalSchedule = scheduleRepository.findScheduleById(id);
+        Schedule schedule = scheduleRepository.findScheduleByIdOrElseThrow(id);
 
-        if (password != optionalSchedule.get().getPassword()) {
+        if (password != schedule.getPassword()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Wrong password");
         }
 
-        return new ScheduleResponseDto(optionalSchedule.get());
+        return new ScheduleResponseDto(schedule);
     }
 
     @Transactional
     @Override
     public void deleteSchedule(long id, long password) {
 
-        Optional<Schedule> optionalSchedule = scheduleRepository.findScheduleById(id);
+        Schedule schedule = scheduleRepository.findScheduleByIdOrElseThrow(id);
 
-        if (password != optionalSchedule.get().getPassword()) {
+        if (password != schedule.getPassword()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Wrong password");
         }
 
@@ -95,7 +90,5 @@ public class ScheduleServiceImpl implements ScheduleService {
         if (deletedRow == 0) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Does not exist id = " + id);
         }
-
-
     }
 }

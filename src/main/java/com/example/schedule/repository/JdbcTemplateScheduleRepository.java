@@ -2,11 +2,13 @@ package com.example.schedule.repository;
 
 import com.example.schedule.dto.ScheduleResponseDto;
 import com.example.schedule.entity.Schedule;
+import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Repository;
+import org.springframework.web.server.ResponseStatusException;
 
 import javax.sql.DataSource;
 import java.sql.ResultSet;
@@ -46,14 +48,20 @@ public class JdbcTemplateScheduleRepository implements ScheduleRepository {
     }
 
     @Override
-    public List<ScheduleResponseDto> getAllSchedules() {
-        return jdbcTemplate.query("select * from schedule", scheduleRowMapper());
+    public List<ScheduleResponseDto> getAllSchedules(String name, String modified_at) {
+        return jdbcTemplate.query("select * from schedule where name = ? || modified_at = ?", scheduleRowMapper());
     }
 
     @Override
     public Optional<Schedule> findScheduleById(long id) {
         List<Schedule> result = jdbcTemplate.query("select * from schedule where id=?", scheduleRowMapperV2(), id);
         return result.stream().findAny();
+    }
+
+    @Override
+    public Schedule findScheduleByIdOrElseThrow(long id) {
+        List<Schedule> result = jdbcTemplate.query("select * from schedule where id=?", scheduleRowMapperV2(), id);
+        return result.stream().findAny().orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Does not exist id = " + id));
     }
 
     @Override

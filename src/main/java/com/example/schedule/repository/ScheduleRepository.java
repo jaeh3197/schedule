@@ -10,9 +10,11 @@ public interface ScheduleRepository {
 
     ScheduleResponseDto saveSchedule(Schedule schedule);
 
-    List<ScheduleResponseDto> getAllSchedules();
+    List<ScheduleResponseDto> getAllSchedules(String name, String modified_at);
 
     Optional<Schedule> findScheduleById(long id);
+
+    Schedule findScheduleByIdOrElseThrow(long id);
 
     int updateSchedule(Long id, String name, long password, String title, String content, String modified_at);
 
