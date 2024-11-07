@@ -60,12 +60,16 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     @Override
     public ScheduleResponseDto updateSchedule(
-            Long id, String name, long password, String title, String content, String modified_at
+            long id, String name, long password, String title, String content, String modified_at
     ) {
         Schedule schedule = scheduleRepository.findScheduleById(id);
 
         if (schedule == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Does not exist id = " + id);
+        }
+
+        if (password != schedule.getPassword()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Wrong password");
         }
 
         schedule.updateSchedule(name, title, content, modified_at);
@@ -74,12 +78,16 @@ public class ScheduleServiceImpl implements ScheduleService {
     }
 
     @Override
-    public void deleteSchedule(long id) {
+    public void deleteSchedule(long id, long password) {
 
         Schedule schedule = scheduleRepository.findScheduleById(id);
 
         if (schedule == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Does not exist id = " + id);
+        }
+
+        if (password != schedule.getPassword()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Wrong password");
         }
 
         scheduleRepository.deleteSchedule(id);
