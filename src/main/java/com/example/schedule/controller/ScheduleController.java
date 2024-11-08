@@ -56,6 +56,7 @@ public class ScheduleController {
         );
     }
 
+    //선택한 일정 삭제
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteSchedule(@PathVariable long id, @RequestBody ScheduleRequestDto dto) {
         scheduleService.deleteSchedule(id, dto.getPassword());

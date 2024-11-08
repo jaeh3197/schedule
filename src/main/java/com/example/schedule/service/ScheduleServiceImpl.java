@@ -24,6 +24,7 @@ public class ScheduleServiceImpl implements ScheduleService {
         this.scheduleRepository = scheduleRepository;
     }
 
+    //일정 생성 로직
     @Override
     public ScheduleResponseDto saveSchedule(ScheduleRequestDto dto) {
 
@@ -36,12 +37,14 @@ public class ScheduleServiceImpl implements ScheduleService {
         return scheduleRepository.saveSchedule(schedule);
     }
 
+    //전체 일정 조회 로직
     @Override
     public List<ScheduleResponseDto> getAllSchedules(String name, String modified_at) {
 
         return scheduleRepository.getAllSchedules(name, modified_at);
     }
 
+    //선택 일정 조회 로직
     @Override
     public ScheduleResponseDto findScheduleById(long id) {
 
@@ -50,6 +53,7 @@ public class ScheduleServiceImpl implements ScheduleService {
         return new ScheduleResponseDto(schedule);
     }
 
+    //선택 일정 수정 로직
     @Transactional
     @Override
     public ScheduleResponseDto updateSchedule(
@@ -75,6 +79,7 @@ public class ScheduleServiceImpl implements ScheduleService {
         return new ScheduleResponseDto(schedule);
     }
 
+    //선택 일정 삭제 로직
     @Transactional
     @Override
     public void deleteSchedule(long id, long password) {
