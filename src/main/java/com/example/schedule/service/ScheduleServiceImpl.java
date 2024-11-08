@@ -5,10 +5,8 @@ import com.example.schedule.dto.ScheduleResponseDto;
 import com.example.schedule.entity.Schedule;
 import com.example.schedule.repository.ScheduleRepository;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -26,6 +24,7 @@ public class ScheduleServiceImpl implements ScheduleService {
         this.scheduleRepository = scheduleRepository;
     }
 
+    //일정 생성 로직
     @Override
     public ScheduleResponseDto saveSchedule(ScheduleRequestDto dto) {
 
@@ -35,55 +34,66 @@ public class ScheduleServiceImpl implements ScheduleService {
         );
 
         //DB 저장
-        Schedule savedSchedule = scheduleRepository.saveSchedule(schedule);
-
-        return new ScheduleResponseDto(savedSchedule);
+        return scheduleRepository.saveSchedule(schedule);
     }
 
+    //전체 일정 조회 로직
     @Override
     public List<ScheduleResponseDto> getAllSchedules(String name, String modified_at) {
 
         return scheduleRepository.getAllSchedules(name, modified_at);
     }
 
+    //선택 일정 조회 로직
     @Override
     public ScheduleResponseDto findScheduleById(long id) {
 
-        Schedule schedule = scheduleRepository.findScheduleById(id);
-
-        if (schedule == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Does not exist id = " + id);
-        }
+        Schedule schedule = scheduleRepository.findScheduleByIdOrElseThrow(id);
 
         return new ScheduleResponseDto(schedule);
     }
 
+    //선택 일정 수정 로직
+    @Transactional
     @Override
     public ScheduleResponseDto updateSchedule(
-            Long id, String name, long password, String title, String content, String modified_at
+            long id, String name, long password, String title, String content, String modified_at
     ) {
-        Schedule schedule = scheduleRepository.findScheduleById(id);
 
-        if (schedule == null) {
+        if (name == null || password == 0 || title == null || modified_at == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Name and password are required");
+        }
+
+        int updatedRow = scheduleRepository.updateSchedule(id, name, password, title, content, modified_at);
+
+        if (updatedRow == 0) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Does not exist id = " + id);
         }
 
-        schedule.updateSchedule(name, title, content, modified_at);
+        Schedule schedule = scheduleRepository.findScheduleByIdOrElseThrow(id);
+
+        if (password != schedule.getPassword()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Wrong password");
+        }
 
         return new ScheduleResponseDto(schedule);
     }
 
+    //선택 일정 삭제 로직
+    @Transactional
     @Override
-    public void deleteSchedule(long id) {
+    public void deleteSchedule(long id, long password) {
 
-        Schedule schedule = scheduleRepository.findScheduleById(id);
+        Schedule schedule = scheduleRepository.findScheduleByIdOrElseThrow(id);
 
-        if (schedule == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Does not exist id = " + id);
+        if (password != schedule.getPassword()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Wrong password");
         }
 
-        scheduleRepository.deleteSchedule(id);
+        int deletedRow = scheduleRepository.deleteSchedule(id, password);
+
+        if (deletedRow == 0) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Does not exist id = " + id);
+        }
     }
-
-
 }

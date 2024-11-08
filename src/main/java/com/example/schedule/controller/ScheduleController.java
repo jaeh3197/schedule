@@ -30,10 +30,10 @@ public class ScheduleController {
     }
 
     //일정 전체 조회
-    @GetMapping("/{name}/{modified_at}")
-    public ResponseEntity<List<ScheduleResponseDto>> getAllSchedules(@PathVariable String name, @PathVariable String modified_at) {
+    @GetMapping
+    public ResponseEntity<List<ScheduleResponseDto>> getAllSchedules(@RequestBody ScheduleRequestDto dto) {
 
-        return new ResponseEntity<>(scheduleService.getAllSchedules(name,modified_at), HttpStatus.OK);
+        return new ResponseEntity<>(scheduleService.getAllSchedules(dto.getName(), dto.getModified_at()), HttpStatus.OK);
     }
 
     //선택 일정 조회
@@ -56,9 +56,10 @@ public class ScheduleController {
         );
     }
 
+    //선택한 일정 삭제
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteSchedule(@PathVariable long id) {
-        scheduleService.deleteSchedule(id);
+    public ResponseEntity<Void> deleteSchedule(@PathVariable long id, @RequestBody ScheduleRequestDto dto) {
+        scheduleService.deleteSchedule(id, dto.getPassword());
         return new ResponseEntity<>(HttpStatus.OK);
     }
 }
