@@ -60,7 +60,8 @@ public class ScheduleServiceImpl implements ScheduleService {
             long id, String name, long password, String title, String content, String modified_at
     ) {
 
-        if (name == null || password == 0 || title == null || modified_at == null) {
+        boolean requiredFieldsAreMissing = name == null || password == 0 || title == null || content == null;
+        if (requiredFieldsAreMissing) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Name and password are required");
         }
 
@@ -72,9 +73,7 @@ public class ScheduleServiceImpl implements ScheduleService {
 
         Schedule schedule = scheduleRepository.findScheduleByIdOrElseThrow(id);
 
-        if (password != schedule.getPassword()) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Wrong password");
-        }
+        validatePassword(schedule.getPassword(), password);
 
         return new ScheduleResponseDto(schedule);
     }
@@ -86,14 +85,19 @@ public class ScheduleServiceImpl implements ScheduleService {
 
         Schedule schedule = scheduleRepository.findScheduleByIdOrElseThrow(id);
 
-        if (password != schedule.getPassword()) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Wrong password");
-        }
+        validatePassword(schedule.getPassword(), password);
 
         int deletedRow = scheduleRepository.deleteSchedule(id, password);
 
         if (deletedRow == 0) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Does not exist id = " + id);
+        }
+    }
+
+    //비밀번호 검증
+    private void validatePassword(long sourcePassword, long targetPassword) {
+        if (sourcePassword != targetPassword) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Wrong password");
         }
     }
 }

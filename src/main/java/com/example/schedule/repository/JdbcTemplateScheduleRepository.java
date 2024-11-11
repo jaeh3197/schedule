@@ -56,15 +56,19 @@ public class JdbcTemplateScheduleRepository implements ScheduleRepository {
     //일정 단건 조회
     @Override
     public Optional<Schedule> findScheduleById(long id) {
-        List<Schedule> result = jdbcTemplate.query("select * from schedule where id=?", scheduleRowMapperV2(), id);
+        List<Schedule> result = jdbcTemplate.query("select * from schedule where id=?", scheduleRowMapperWithPassword(), id);
         return result.stream().findAny();
     }
 
     //일정이 없을 경우 예외 처리
     @Override
     public Schedule findScheduleByIdOrElseThrow(long id) {
-        List<Schedule> result = jdbcTemplate.query("select * from schedule where id=?", scheduleRowMapperV2(), id);
-        return result.stream().findAny().orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Does not exist id = " + id));
+        List<Schedule> result = jdbcTemplate.query("select * from schedule where id=?", scheduleRowMapperWithPassword(), id);
+        return result.stream()
+                .findAny()
+                .orElseThrow(
+                        () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Does not exist id = " + id)
+                );
     }
 
     //일정 수정
@@ -98,7 +102,7 @@ public class JdbcTemplateScheduleRepository implements ScheduleRepository {
         };
     }
 
-    private RowMapper<Schedule> scheduleRowMapperV2() {
+    private RowMapper<Schedule> scheduleRowMapperWithPassword() {
         return new RowMapper<Schedule>() {
             @Override
             public Schedule mapRow(ResultSet rs, int rowNum) throws SQLException {
